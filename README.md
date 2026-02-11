@@ -1,55 +1,76 @@
-# me-imagemaxxing-app
+# me-imagemaxxing
 
-**Turn average photos into dating profile & social media ready images.**
+Upload one photo, generate exactly five identity-safe editing attempts using deterministic presets or AI-powered prompt mode (OpenAI / Gemini).
 
-This app generates 10 professionally-edited variations of your photos using Fiverr-quality presets optimized for dating profiles, Instagram, and TikTok.
+## Quick Start (local)
 
-## What this does
+```bash
+# 1. Install dependencies
+npm install
 
-Upload photos → AI generates 10 variations with professional presets → pick your favorite → download
+# 2. (Optional) Copy env template and add your API keys
+cp .env.example .env.local
+# Edit .env.local and paste your keys
 
-**Goal:** Transform 6/10 photos into 9/10 photos purely through editing (filters, lighting, shadows, color grading)
-
-## Features
-
-- **Batch upload** (up to 100 photos)
-- **10 professional presets** based on actual Fiverr dating profile editing techniques
-- **Side-by-side comparison** view
-- **Download selected variations**
-- **Optional AI enhancements** (coming soon: fix double chin, smooth hair, etc.)
-
-## Tech Stack
-
-- **Frontend:** Next.js + React + Tailwind CSS
-- **Image Processing:** Python + Pillow
-- **Presets:** Professional portrait retouching techniques (dodge & burn, color grading, skin smoothing)
-
-## Professional Editing Techniques Used
-
-Based on [Fiverr professional editing practices](https://www.fiverr.com/smastudio/professionally-edit-your-tinder-profile-photos-in-photoshop) and [portrait retouching guides](https://pixelphant.com/blog/expert-portrait-retouching-guide):
-
-1. **Natural enhancement** - Subtle edits that don't look fake
-2. **Color grading** - Warm/cool tones optimized for each platform
-3. **Dodge & burn** - Sculpt face, enhance cheekbones, add eye sparkle
-4. **Skin smoothing** - Frequency separation without over-smoothing
-5. **Contrast & exposure** - Professional depth and dimension
-
-## How to run
-
-1. Open in Dev Container → follow `docs/setup.md`
-2. Install dependencies: `npm install && pip install -r requirements.txt`
-3. Run dev server: `npm run dev`
-4. Open `http://localhost:3000`
-
-## Project Structure
-
-```
-/app                 # Next.js frontend
-/scripts             # Python image processing scripts
-/presets             # 10 professional editing presets
-/docs/images         # Before/after examples
+# 3. Run
+npm run dev
 ```
 
-## Screenshots
+Open [http://localhost:3000](http://localhost:3000).
 
-Put before/after images in `docs/images/`
+**Preset mode works with zero API keys.** Prompt mode requires either an OpenAI or Gemini key — you can paste it directly in the Advanced panel on the page or set it in `.env.local`.
+
+## Environment Variables
+
+| Variable | Required? | Description |
+|---|---|---|
+| `DATABASE_PATH` | No | SQLite path. Default: `./data/app.db`. Railway: `/data/app.db` with volume at `/data` |
+| `OPENAI_API_KEY` | For OpenAI prompt mode | Your OpenAI key |
+| `GEMINI_API_KEY` | For Gemini prompt mode | Your Google AI Studio key |
+| `GEMINI_MODEL` | No | Default: `gemini-2.5-flash-image` |
+
+## Railway Deployment
+
+1. Push to GitHub, connect repo in Railway
+2. Railway auto-detects `railway.toml` and runs `npm run build && npm run start`
+3. **Add volume**: Service Settings → Volumes → Mount at `/data`
+4. **Set variables** in Railway dashboard:
+   - `DATABASE_PATH` = `/data/app.db`
+   - `OPENAI_API_KEY` = your key (optional)
+   - `GEMINI_API_KEY` = your key (optional)
+
+That's it. No extra configuration needed.
+
+## Architecture
+
+- **Next.js 14 App Router** (TypeScript, Tailwind)
+- **SQLite** via `better-sqlite3` for persistence
+- **sharp** for deterministic preset transforms
+- **OpenAI Responses API** (`gpt-4.1-mini` orchestrator → `gpt-image-1` renderer)
+- **Google Gemini API** (`gemini-2.5-flash-image` via `v1beta/generateContent`)
+
+## API Routes
+
+| Route | Method | Description |
+|---|---|---|
+| `/api/upload` | POST | Upload JPG/PNG, returns `imageId` |
+| `/api/generate/preset` | POST | Run preset (A/B/C) with 5 jittered variations |
+| `/api/generate/prompt` | POST | Run prompt mode (OpenAI or Gemini), 5 attempts |
+| `/api/feedback/winner` | POST | Mark a winner for a run |
+| `/api/save` | POST | Save/download an attempt |
+| `/api/file/[...path]` | GET | Serve files from `/data` |
+| `/api/health` | GET | System health + key status |
+
+## Verified API Integration (Feb 2026)
+
+### OpenAI
+- Orchestrator: `gpt-4.1-mini` (valid per OpenAI supported models list)
+- Renderer: `gpt-image-1` (auto-selected by image_generation tool)
+- Response shape: `output[].type === "image_generation_call"`, base64 in `.result`
+- Auth: `Authorization: Bearer <key>` (via Node SDK)
+
+### Gemini
+- Model: `gemini-2.5-flash-image` (stable, available via AI Studio key)
+- Endpoint: `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`
+- Auth: `x-goog-api-key: <key>` header
+- Image returned in `candidates[0].content.parts[].inlineData.data` (base64)

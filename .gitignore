@@ -16,15 +16,12 @@ dist/
 .env.local
 .env.*.local
 
-# Uploads & Output
-public/uploads/*
-!public/uploads/.gitkeep
-output/
-*.jpg
-*.png
-*.jpeg
-!docs/images/*.jpg
-!docs/images/*.png
+# Data (uploads, outputs, database)
+data/uploads/*
+!data/uploads/.gitkeep
+data/outputs/*
+!data/outputs/.gitkeep
+data/*.db
 
 # IDE
 .vscode/
