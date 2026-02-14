@@ -14,7 +14,7 @@ export async function GET(req: Request) {
       uploadsDirExists: fs.existsSync(UPLOADS_DIR),
       outputsDirExists: fs.existsSync(OUTPUTS_DIR),
       databaseDirWritable: fs.existsSync(path.dirname(dbPath)),
-      openaiConfigured: Boolean(process.env.OPENAI_API_KEY?.trim()),
+      openaiConfigured: Boolean(process.env.OPENAI_API_KEY?.trim() || process.env.CHATGPT_API_KEY?.trim()),
       geminiConfigured: Boolean(process.env.GEMINI_API_KEY?.trim()),
       databasePath: dbPath,
     },

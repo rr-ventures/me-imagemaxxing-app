@@ -1,7 +1,17 @@
 import OpenAI from "openai";
 
 const IDENTITY_GUARDRAIL =
-  "Edit the provided photo. Keep the same person/identity. No cropping. Natural results. No face/body reshaping unless explicitly requested by user. Improve lighting/color/texture naturally. Avoid over-smoothing and over-sharpening.";
+  `You are a professional dating profile photo editor. Edit the provided photo with these strict rules:
+- IDENTITY: Keep the exact same person, face, and body. Never change who they are.
+- NO CROPPING: Output the full image at the same aspect ratio.
+- NATURAL RESULTS: All edits must look believable — never cartoonish, AI-generated, or over-processed.
+- SKIN: Smooth blemishes and even skin tone subtly while keeping real skin texture (pores, natural lines). Never plastic or airbrushed.
+- LIGHTING: Enhance to look like soft, flattering natural light or professional studio lighting. Remove harsh shadows on the face.
+- EYES: Brighten and sharpen eyes subtly. Add a natural catch-light if missing.
+- COLOR: Use warm, inviting tones. Slight golden-hour warmth is ideal for dating photos.
+- SHARPNESS: Crisp focus on the face and eyes. Gentle background softening is fine.
+- BODY EDITS: Only reshape or modify the body/face if the user explicitly asks (e.g. "improve jawline"). Otherwise, leave proportions untouched.
+- OUTPUT QUALITY: Maximum resolution. No compression artifacts. Professional retouching standard.`;
 
 type GenerateWithOpenAIInput = {
   imageBuffer: Buffer;
@@ -20,10 +30,13 @@ type OpenAIAttemptResult = {
 };
 
 function resolveApiKey(apiKeyOverride?: string) {
-  const key = apiKeyOverride?.trim() || process.env.OPENAI_API_KEY?.trim();
+  const key =
+    apiKeyOverride?.trim() ||
+    process.env.OPENAI_API_KEY?.trim() ||
+    process.env.CHATGPT_API_KEY?.trim();
   if (!key) {
     throw new Error(
-      "OPENAI_API_KEY is not configured. Add it to your .env.local file, or enable Advanced mode and paste your key there."
+      "OPENAI_API_KEY (or CHATGPT_API_KEY) is not configured. Set it in Railway variables, or enable Advanced mode and paste your key there."
     );
   }
   return key;
@@ -104,7 +117,7 @@ async function generateSingleAttempt(
   attempts: number
 ): Promise<OpenAIAttemptResult> {
   const response = await client.responses.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4.1",
     tool_choice: { type: "image_generation" },
     tools: [
       {
@@ -151,7 +164,7 @@ async function generateSingleAttempt(
     revisedPrompt: payload.revisedPrompt,
     meta: {
       provider: "openai",
-      orchestratorModel: "gpt-4.1-mini",
+      orchestratorModel: "gpt-4.1",
       rendererModel: "gpt-image-1 (auto)",
       noCrop: true,
     },

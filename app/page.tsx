@@ -17,11 +17,13 @@ function parseApi<T>(res: Response, json: any): T {
 
 /* ─────── Suggested prompts ─────── */
 const SUGGESTED_PROMPTS = [
-  "Improve lighting, warm tones, dating profile look",
-  "Natural skin retouching, keep texture, brightened eyes",
-  "Soft studio portrait light, shallow depth of field",
-  "High-fashion editorial look, cinematic color grade",
-  "Clean and sharp, subtle glow, professional headshot",
+  "Professional dating profile retouch: improve lighting, warm golden tones, smooth skin naturally, brighten eyes",
+  "Natural skin retouch, even skin tone, remove blemishes, keep real texture, sharpen eyes",
+  "Soft flattering portrait light, gentle background blur, warm inviting tones",
+  "Improve jawline definition, tighten loose skin subtly, keep it natural and believable",
+  "Increase resolution and sharpness, clean up skin, professional headshot quality",
+  "Remove under-eye shadows, brighten smile, warm golden-hour lighting effect",
+  "Cinematic dating photo: shallow depth of field, rich warm color grade, crisp face detail",
 ];
 
 /* ─────── Page ─────── */
@@ -227,8 +229,8 @@ export default function Home() {
             </div>
             <a href="/api/health" target="_blank" rel="noreferrer" className="rounded-xl border border-cyan-300/30 bg-cyan-500/20 px-4 py-2 text-xs font-medium text-cyan-100 transition hover:bg-cyan-500/30">Health Check JSON</a>
           </div>
-          <p className="mt-3 text-slate-200">Upload one photo and generate exactly five attempts in preset or prompt mode.</p>
-          <p className="mt-1 text-sm text-slate-300/90">No cropping. Identity preserved by default. Prompt mode always edits from your uploaded photo.</p>
+          <p className="mt-3 text-slate-200">Upload a dating profile photo. Get 5 professionally enhanced variations instantly.</p>
+          <p className="mt-1 text-sm text-slate-300/90">No cropping. Identity preserved. Use <strong>Preset</strong> for quick color grading or <strong>Prompt</strong> for AI-powered retouching (skin, lighting, jawline, eyes).</p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs">
             <span className={`rounded-full border px-3 py-1 ${health?.openaiConfigured ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-200" : "border-amber-400/60 bg-amber-500/20 text-amber-200"}`}>OpenAI {health?.openaiConfigured ? "configured" : "not configured"}</span>
             <span className={`rounded-full border px-3 py-1 ${health?.geminiConfigured ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-200" : "border-amber-400/60 bg-amber-500/20 text-amber-200"}`}>Gemini {health?.geminiConfigured ? "configured" : "not configured"}</span>
@@ -267,7 +269,7 @@ export default function Home() {
               {mode === "prompt" && (
                 <div className="mt-3 flex gap-2">
                   {(["openai", "gemini"] as Provider[]).map(p => (
-                    <button key={p} type="button" onClick={() => setProvider(p)} className={`flex-1 rounded-xl px-3 py-2 text-xs font-medium transition ${provider === p ? "bg-indigo-500 text-white" : "border border-white/20 bg-white/10 text-slate-200 hover:bg-white/20"}`}>{p === "openai" ? "OpenAI (gpt-4.1-mini)" : "Gemini (2.5 flash)"}</button>
+                    <button key={p} type="button" onClick={() => setProvider(p)} className={`flex-1 rounded-xl px-3 py-2 text-xs font-medium transition ${provider === p ? "bg-indigo-500 text-white" : "border border-white/20 bg-white/10 text-slate-200 hover:bg-white/20"}`}>{p === "openai" ? "OpenAI (gpt-4.1)" : "Gemini (2.5 flash)"}</button>
                   ))}
                 </div>
               )}
