@@ -21,5 +21,5 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 EXPOSE 3000
 
-# Use shell so $PORT from Railway is picked up
-CMD node node_modules/next/dist/bin/next start -H 0.0.0.0 -p ${PORT:-3000}
+RUN chmod +x start.sh
+CMD ["./start.sh"]
