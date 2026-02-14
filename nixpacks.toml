@@ -6,6 +6,3 @@ cmds = ["npm ci || npm i"]
 
 [phases.build]
 cmds = ["npm run build"]
-
-[start]
-cmd = "npm run start"
