@@ -122,6 +122,9 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, v));
 }
 
+/** Sharp recomb() expects a 3x3 matrix (tuple of 3 tuples of 3 numbers). */
+type Matrix3x3 = [[number, number, number], [number, number, number], [number, number, number]];
+
 /**
  * Apply warmth by adjusting RGB channels directly via recomb matrix.
  * This avoids the Sharp tint() bug where near-white values strip all color.
@@ -129,13 +132,12 @@ function clamp(v: number, lo: number, hi: number) {
  * Positive warmthShift = warmer (boost red, reduce blue)
  * Negative warmthShift = cooler (boost blue, reduce red)
  */
-function warmthMatrix(shift: number): [number[], number[], number[]] {
-  // Normalize shift to a small multiplier (shift range: -30 to +30)
+function warmthMatrix(shift: number): Matrix3x3 {
   const s = shift / 100;
   return [
-    [1 + s * 0.6, s * 0.2, 0],          // Red channel: boost red
-    [0, 1 + s * 0.1, 0],                 // Green: slight boost for warmth
-    [0, s * 0.1, 1 - s * 0.4],           // Blue channel: reduce blue for warmth
+    [1 + s * 0.6, s * 0.2, 0],
+    [0, 1 + s * 0.1, 0],
+    [0, s * 0.1, 1 - s * 0.4],
   ];
 }
 
