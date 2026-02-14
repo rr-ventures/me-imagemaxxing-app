@@ -225,7 +225,6 @@ export default function Home() {
               <p className="text-xs uppercase tracking-[0.18em] text-cyan-300/80">Dating Photo Studio</p>
               <h1 className="mt-1 text-4xl font-semibold tracking-tight text-white">me-imagemaxxing</h1>
             </div>
-            <a href="/api/health" target="_blank" rel="noreferrer" className="rounded-xl border border-cyan-300/30 bg-cyan-500/20 px-4 py-2 text-xs font-medium text-cyan-100 transition hover:bg-cyan-500/30">Health Check</a>
           </div>
           <p className="mt-3 text-slate-200">Upload a dating photo. Get 5 research-backed filter variations instantly, or use AI for advanced retouching.</p>
           <p className="mt-1 text-sm text-slate-300/90">Enhanced photos get <strong>41% more swipes</strong>. High-quality photos get <strong>272% more matches</strong>. No cropping. Identity preserved.</p>
