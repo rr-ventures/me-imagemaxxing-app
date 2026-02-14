@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+data/uploads/*
+data/outputs/*
+data/*.db
+*.log
+README.md
+BACKLOG.md
+docs
+.vscode
+.idea
+.DS_Store
