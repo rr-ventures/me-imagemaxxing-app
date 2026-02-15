@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSession, signOut } from "next-auth/react";
 import ProfilePreview from "./components/ProfilePreview";
 
 /* ─────── Top-level tabs ─────── */
@@ -47,8 +46,6 @@ type UserInfo = {
 
 /* ─────── Page ─────── */
 export default function Home() {
-  const { data: session } = useSession();
-
   /* Top-level tab */
   const [appTab, setAppTab] = useState<AppTab>("editor");
 
@@ -64,8 +61,8 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (session?.user) fetchUserInfo();
-  }, [session]);
+    fetchUserInfo();
+  }, []);
 
   /* Upload */
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -252,32 +249,6 @@ export default function Home() {
               Upload a photo. Get 4 professional dating edits or AI retouch. Pick the best.
             </p>
           </div>
-          {session?.user && (
-            <div className="flex items-center gap-3">
-              {/* Generation counter */}
-              {userInfo && (
-                <div className="flex items-center gap-1.5 rounded-pill border border-white/[0.08] bg-[#111418] px-3 py-1.5">
-                  {userInfo.maxGenerations !== null ? (
-                    <>
-                      <span className={`text-xs font-semibold ${atLimit ? "text-red-400" : "text-tinder-gradient"}`}>
-                        {userInfo.generationsRemaining}
-                      </span>
-                      <span className="text-[10px] text-[#667180]">/ {userInfo.maxGenerations} left</span>
-                    </>
-                  ) : (
-                    <span className="text-[10px] font-medium text-emerald-400">Admin (unlimited)</span>
-                  )}
-                </div>
-              )}
-              <span className="text-xs text-[#667180]">{session.user.email}</span>
-              <button
-                onClick={() => signOut()}
-                className="rounded-pill border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-[#8e96a3] transition hover:bg-white/10 hover:text-white"
-              >
-                Sign Out
-              </button>
-            </div>
-          )}
         </header>
 
         {/* ──── Top-level tab navigation ──── */}

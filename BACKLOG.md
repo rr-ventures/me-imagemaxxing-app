@@ -5,6 +5,22 @@
 
 ---
 
+## 🔒 Auth & User Management (Disabled — Needs Fix)
+
+### User Authentication (NextAuth)
+- [ ] Fix NextAuth Credentials provider + PrismaAdapter redirect issue on Railway (0.0.0.0 ERR_ADDRESS_INVALID)
+- [ ] Options: switch to cookie-based custom auth, or fix NextAuth middleware URL construction behind reverse proxy
+- [ ] Re-enable middleware.ts auth gate
+- [ ] Re-enable SessionProvider in app/providers.tsx
+- [ ] Re-enable requireAuthAndLimit in API routes (generate/preset, generate/prompt)
+- [ ] Re-enable /api/me with real user lookup
+- [ ] Re-enable signin page UI
+- [ ] Add per-user generation rate limiting (was 5 free generations)
+- [ ] Add admin role with unlimited generations
+- [ ] Add sign-out button in header
+
+---
+
 ## 🔥 Immediate (Priority #1-3)
 
 ### 1. Research Fiverr Photo Editors

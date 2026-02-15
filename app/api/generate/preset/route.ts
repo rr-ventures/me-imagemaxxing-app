@@ -6,7 +6,6 @@ import db from "@/lib/db";
 import { OUTPUTS_DIR, safeJoinDataPath } from "@/lib/paths";
 import { generatePresetEdits } from "@/lib/providers/nanobanana";
 import { ApiError, fail, ok, requestId } from "@/lib/api-response";
-import { requireAuthAndLimit, incrementGenerationCount } from "@/lib/auth-guard";
 
 export const runtime = "nodejs";
 
@@ -18,9 +17,6 @@ function mimeFromPath(p: string) {
 export async function POST(req: Request) {
   const rid = requestId(req.headers);
   try {
-    // Auth + rate limit check
-    const authUser = await requireAuthAndLimit();
-
     const body = await req.json();
     const { imageId } = body;
     if (!imageId) throw new ApiError(400, "PRESET_MISSING_FIELDS", "Missing imageId.");
@@ -49,9 +45,6 @@ export async function POST(req: Request) {
       db.prepare(`INSERT INTO attempts (id, run_id, "index", output_path, meta_json, revised_prompt) VALUES (?, ?, ?, ?, ?, ?)`).run(attemptId, runId, i + 1, relativeOutput, JSON.stringify(item.meta), item.revisedPrompt);
       resultAttempts.push({ attemptId, url: `/api/file/${relativeOutput}`, meta: item.meta, revisedPrompt: item.revisedPrompt });
     }
-
-    // Increment generation count after successful generation
-    await incrementGenerationCount(authUser.id);
 
     return ok({ runId, attempts: resultAttempts }, rid);
   } catch (error) {
