@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  trustHost: true,
   pages: {
     signIn: "/signin",
     error: "/signin",
@@ -29,24 +30,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const pw = (credentials?.password as string)?.trim();
-        if (!pw) return null;
-        const adminPassword = process.env.ADMIN_PASSWORD?.trim() || "rrventures";
-        if (pw !== adminPassword) return null;
+        try {
+          const pw = (credentials?.password as string)?.trim();
+          if (!pw) return null;
+          const adminPassword = process.env.ADMIN_PASSWORD?.trim() || "rrventures";
+          if (pw !== adminPassword) return null;
 
-        // Find or create admin user
-        let admin = await prisma.user.findFirst({ where: { role: "admin" } });
-        if (!admin) {
-          admin = await prisma.user.create({
-            data: {
-              email: "reece@notime.world",
-              name: "Admin",
-              role: "admin",
-              emailVerified: new Date(),
-            },
-          });
+          // Find or create admin user
+          let admin = await prisma.user.findFirst({ where: { role: "admin" } });
+          if (!admin) {
+            admin = await prisma.user.create({
+              data: {
+                email: "reece@notime.world",
+                name: "Admin",
+                role: "admin",
+                emailVerified: new Date(),
+              },
+            });
+          }
+          return { id: admin.id, email: admin.email, name: admin.name, role: admin.role };
+        } catch (e) {
+          console.error("[auth] authorize error:", e);
+          return null;
         }
-        return { id: admin.id, email: admin.email, name: admin.name, role: admin.role };
       },
     }),
   ],

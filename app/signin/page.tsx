@@ -2,26 +2,39 @@
 
 import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 function SignInContent() {
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  const router = useRouter();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const urlError = searchParams.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"email" | "password">("email");
   const [emailSent, setEmailSent] = useState(false);
+  const [error, setError] = useState<string | null>(
+    urlError === "CredentialsSignin"
+      ? "Incorrect password. Please try again."
+      : urlError === "Configuration"
+        ? "Server configuration error. Please try again."
+        : urlError
+          ? "Something went wrong. Please try again."
+          : null
+  );
 
   async function handleEmailSignIn(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
+    setError(null);
     try {
-      await signIn("resend", { email: email.trim(), callbackUrl: "/" });
+      // Email magic link still uses redirect (it needs to show "check your email")
+      await signIn("resend", { email: email.trim(), callbackUrl });
       setEmailSent(true);
     } catch {
-      // handled by next-auth redirect
+      setError("Failed to send magic link. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -31,10 +44,30 @@ function SignInContent() {
     e.preventDefault();
     if (!password.trim()) return;
     setLoading(true);
+    setError(null);
     try {
-      await signIn("admin-password", { password: password.trim(), callbackUrl: "/" });
+      // Use redirect: false to prevent server-side redirect to 0.0.0.0
+      const result = await signIn("admin-password", {
+        password: password.trim(),
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // NextAuth returns error string on failure
+        if (result.error === "CredentialsSignin") {
+          setError("Incorrect password. Please try again.");
+        } else if (result.error === "Configuration") {
+          setError("Server error. The database may not be ready yet. Please try again in a moment.");
+        } else {
+          setError(result.error);
+        }
+      } else if (result?.ok) {
+        // Success — navigate client-side instead of server redirect
+        router.push(callbackUrl);
+        router.refresh();
+      }
     } catch {
-      // handled by next-auth redirect
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -52,9 +85,6 @@ function SignInContent() {
               viewBox="0 0 24 24"
               aria-hidden="true"
             >
-              <path d="M8.21 10.08c-.02 0-.04 0-.06.02-.02.02-.04.04-.06.06-.02.02-.02.04-.02.06 0 .02 0 .04.02.06.56 1.15 1.25 2.22 2.06 3.2.56.68 1.18 1.3 1.84 1.86.02.02.04.02.06.02.02 0 .04-.02.06-.02.02-.02.02-.04.02-.06-.02-.58-.14-1.14-.34-1.68-.2-.54-.48-1.04-.82-1.5-.34-.46-.74-.88-1.18-1.24-.44-.36-.92-.66-1.44-.9-.02-.02-.04-.02-.06-.02zm4.24 7.26c.66-.56 1.28-1.18 1.84-1.86.8-1 1.5-2.06 2.06-3.2.02-.02.02-.04.02-.06 0-.02 0-.04-.02-.06-.02-.02-.04-.04-.06-.06-.02-.02-.04-.02-.06-.02-.52.24-1 .54-1.44.9-.44.36-.84.78-1.18 1.24-.34.46-.62.96-.82 1.5-.2.54-.32 1.1-.34 1.68 0 .02 0 .04.02.06.02.02.04.02.06.02.02 0 .04 0 .06-.02zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8z" />
-              <path d="M12.87 19.03c-.02.02-.04.02-.06.02-.02 0-.04-.02-.06-.02-.66-.56-1.28-1.18-1.84-1.86-.8-1-1.5-2.06-2.06-3.2-.02-.02-.02-.04-.02-.06 0-.02 0-.04.02-.06.02-.02.04-.04.06-.06.02-.02.04-.02.06-.02.52.24 1 .54 1.44.9.44.36.84.78 1.18 1.24.34.46.62.96.82 1.5.2.54.32 1.1.34 1.68 0 .02 0 .04.02.06zm-1.74-7.26c.02 0 .04 0 .06-.02.02-.02.04-.04.06-.06.02-.02.02-.04.02-.06 0-.02 0-.04-.02-.06-.56-1.15-1.25-2.22-2.06-3.2-.56-.68-1.18-1.3-1.84-1.86-.02-.02-.04-.02-.06-.02-.02 0-.04.02-.06.02-.02.02-.02.04-.02.06.02.58.14 1.14.34 1.68.2.54.48 1.04.82 1.5.34.46.74.88 1.18 1.24.44.36.92.66 1.44.9.02.02.04.02.06.02z" opacity=".3" />
-              {/* Simplified Flame Icon Placeholder - Replace with actual Tinder flame SVG if available */}
               <path d="M12.94 3.08c.57 1.83.13 3.42-.56 4.68-1.16 2.12-2.92 3.16-3.1 5.38-.17 2.1 1.26 4.04 3.32 4.53 2.06.49 4.22-.38 5.26-2.12.56-.94.78-2.04.64-3.12-.01-.08.08-.14.15-.09.91.64 1.57 1.62 1.83 2.72.48 2.02-.19 4.2-1.73 5.68-1.54 1.48-3.7 2.07-5.77 1.58-2.07-.49-3.75-2.06-4.48-4.04-.73-1.98-.38-4.22.94-5.92 1.32-1.7 3.52-2.68 3.5-4.84-.01-1.42-.6-2.74-1.62-3.72-.07-.07-.02-.19.08-.19.5-.02 1.01.14 1.44.47z" fill="white"/>
             </svg>
           </div>
@@ -69,9 +99,7 @@ function SignInContent() {
         {/* Error Message */}
         {error && (
           <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-center text-sm font-medium text-red-600 shadow-sm">
-            {error === "CredentialsSignin"
-              ? "Oops! That password doesn't look right."
-              : "Something went wrong. Please try again."}
+            {error}
           </div>
         )}
 
@@ -85,7 +113,7 @@ function SignInContent() {
         {/* Toggle */}
         <div className="flex rounded-full bg-gray-100 p-1">
           <button
-            onClick={() => setMode("email")}
+            onClick={() => { setMode("email"); setError(null); }}
             className={`flex-1 rounded-full py-2.5 text-sm font-bold transition-all duration-200 ${
               mode === "email"
                 ? "bg-white text-gray-900 shadow-md"
@@ -95,7 +123,7 @@ function SignInContent() {
             Email
           </button>
           <button
-            onClick={() => setMode("password")}
+            onClick={() => { setMode("password"); setError(null); }}
             className={`flex-1 rounded-full py-2.5 text-sm font-bold transition-all duration-200 ${
               mode === "password"
                 ? "bg-white text-gray-900 shadow-md"
