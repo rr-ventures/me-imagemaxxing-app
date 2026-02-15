@@ -5,14 +5,27 @@
 * { box-sizing: border-box; }
 
 body {
-  background: #0b1220;
+  background: #111418;
   color: #e2e8f0;
+  font-family: "Avenir Next", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 button, a { transition: all 160ms ease; }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.35); border-radius: 999px; }
-::-webkit-scrollbar-track { background: rgba(15,23,42,0.2); }
+/* Tinder gradient utility */
+.bg-tinder-gradient {
+  background: linear-gradient(135deg, #FD267A 0%, #FF7854 100%);
+}
+
+.text-tinder-gradient {
+  background: linear-gradient(135deg, #FD267A 0%, #FF7854 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(102,113,128,0.4); border-radius: 999px; }
+::-webkit-scrollbar-track { background: rgba(17,20,24,0.5); }

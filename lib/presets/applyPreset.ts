@@ -1,14 +1,13 @@
 import sharp from "sharp";
 
 /**
- * 5 research-backed dating profile photo filters.
+ * 5 research-backed dating profile photo filters (Sharp — no API calls).
  *
- * Sources:
- * - OKCupid blog data: warm tones & high contrast get more messages
- * - Photofeeler studies: bright, warm photos score highest for attractiveness
- * - TheUltimateProfile.com 2025 study: enhanced photos get 41% more swipes,
- *   but over-editing triggers uncanny valley → keep it subtle & natural
- * - Hinge data: naturally bright, high-quality photos outperform all others
+ * Research sources:
+ * - 1.8M profile study: warm tones +18% attractiveness, bright +14% energy, earth tones +12% approachability
+ * - TheUltimateProfile 2025: enhanced photos 41% more swipes; pro-quality 272% more matches; subtle = key
+ * - VSCO portrait presets (E3, KP2/Kodak Portra, A6): exposure +0.7–1.3, contrast -1.3 to -1.5, warmth, sharpen 0.7–0.9
+ * - Instagram/Juno-style: brighten subject, warm skin, added contrast for portraits
  */
 
 export type FilterId = "golden-hour" | "clean-sharp" | "vivid-pop" | "soft-portrait" | "film-warm";
@@ -21,52 +20,47 @@ export interface FilterDefinition {
 }
 
 interface FilterParams {
-  brightness: number;       // multiplier, 1 = no change
-  saturation: number;       // multiplier, 1 = no change
-  contrast: number;         // multiplier for linear(), 1 = no change
-  warmthShift: number;      // kelvin-style: positive = warmer, negative = cooler. Range roughly -30 to +30
-  sharpness: number;        // sigma for sharpen, 0 = no sharpening
-  shadowLift: number;       // 0-50, lifts dark tones (0 = no lift)
-  highlightCompress: number; // 0-30, compresses bright tones (0 = no compression)
-  vignetteStrength: number; // 0-1, subtle vignette to draw eye to center
+  brightness: number;
+  saturation: number;
+  contrast: number;
+  warmthShift: number;
+  sharpness: number;
+  shadowLift: number;
+  highlightCompress: number;
+  vignetteStrength: number;
 }
 
 /**
- * The 5 dating-optimized filters, ranked by research effectiveness:
- *
- * 1. Golden Hour — warm glow, #1 most effective for dating (warm tones = +27% attractiveness)
- * 2. Clean & Sharp — professional headshot look (high-quality photos = 272% more matches)
- * 3. Vivid Pop — thumbnail-optimized contrast (high contrast = 32% more engagement)
- * 4. Soft Portrait — flattering portrait light (mimics pro photography)
- * 5. Film Warm — instagram aesthetic (perceived as more creative/interesting)
+ * Professional photoshoot-level presets. Values pushed so each of the 5 looks clearly different.
+ * Research: warm +18% attractiveness, pro quality 272% more matches, VSCO/Portra-style reference.
  */
 export const FILTERS: FilterDefinition[] = [
   {
     id: "golden-hour",
     name: "Golden Hour",
-    description: "Warm golden tones, soft glow — the #1 dating photo filter based on research",
+    description: "Warm tones (+18% attractiveness). Strong golden glow, lifted shadows.",
     params: {
-      brightness: 1.08,
-      saturation: 1.10,
-      contrast: 1.06,
-      warmthShift: 20,
-      sharpness: 0.5,
-      shadowLift: 15,
-      highlightCompress: 5,
-      vignetteStrength: 0.15,
+      brightness: 1.18,
+      saturation: 1.20,
+      contrast: 1.05,
+      warmthShift: 42,
+      sharpness: 0.4,
+      shadowLift: 28,
+      highlightCompress: 8,
+      vignetteStrength: 0.28,
     },
   },
   {
     id: "clean-sharp",
     name: "Clean & Sharp",
-    description: "Professional headshot quality — crisp, bright, polished",
+    description: "Pro headshot. Crisp detail, neutral-cool, high clarity.",
     params: {
-      brightness: 1.10,
-      saturation: 1.04,
-      contrast: 1.10,
-      warmthShift: 5,
-      sharpness: 1.2,
-      shadowLift: 10,
+      brightness: 1.16,
+      saturation: 1.02,
+      contrast: 1.22,
+      warmthShift: -4,
+      sharpness: 1.6,
+      shadowLift: 14,
       highlightCompress: 0,
       vignetteStrength: 0,
     },
@@ -74,46 +68,46 @@ export const FILTERS: FilterDefinition[] = [
   {
     id: "vivid-pop",
     name: "Vivid Pop",
-    description: "Rich colors & strong contrast — stands out in the swipe deck",
+    description: "Rich color & punch. Stands out in the swipe deck.",
     params: {
-      brightness: 1.05,
-      saturation: 1.18,
-      contrast: 1.15,
-      warmthShift: 8,
-      sharpness: 0.8,
-      shadowLift: 5,
-      highlightCompress: 5,
-      vignetteStrength: 0.1,
+      brightness: 1.08,
+      saturation: 1.38,
+      contrast: 1.28,
+      warmthShift: 12,
+      sharpness: 1.0,
+      shadowLift: 8,
+      highlightCompress: 4,
+      vignetteStrength: 0.14,
     },
   },
   {
     id: "soft-portrait",
     name: "Soft Portrait",
-    description: "Gentle, flattering light — smooths imperfections naturally",
+    description: "VSCO Portra-style. Soft, flattering, dreamy.",
     params: {
       brightness: 1.12,
       saturation: 1.06,
-      contrast: 0.95,
-      warmthShift: 12,
-      sharpness: 0.3,
-      shadowLift: 20,
-      highlightCompress: 10,
-      vignetteStrength: 0.2,
+      contrast: 0.82,
+      warmthShift: 24,
+      sharpness: 0.25,
+      shadowLift: 36,
+      highlightCompress: 18,
+      vignetteStrength: 0.32,
     },
   },
   {
     id: "film-warm",
     name: "Film Warm",
-    description: "Vintage film tones — perceived as more creative & interesting",
+    description: "Vintage film. Muted color, warm shadows, editorial look.",
     params: {
-      brightness: 1.04,
-      saturation: 0.92,
-      contrast: 1.08,
-      warmthShift: 15,
-      sharpness: 0.4,
-      shadowLift: 25,
-      highlightCompress: 15,
-      vignetteStrength: 0.18,
+      brightness: 1.02,
+      saturation: 0.78,
+      contrast: 1.12,
+      warmthShift: 38,
+      sharpness: 0.35,
+      shadowLift: 42,
+      highlightCompress: 24,
+      vignetteStrength: 0.36,
     },
   },
 ];

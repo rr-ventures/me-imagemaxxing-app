@@ -13,6 +13,39 @@ const IDENTITY_GUARDRAIL =
 - BODY EDITS: Only reshape or modify the body/face if the user explicitly asks (e.g. "improve jawline"). Otherwise, leave proportions untouched.
 - OUTPUT QUALITY: Maximum resolution. No compression artifacts. Professional retouching standard.`;
 
+const PROMPT_VARIATION_SYSTEM = `You are helping prepare instructions for an image-editing API. The user will give a single freeform request (like they would in ChatGPT) for how to edit a dating profile photo. Your job is to output exactly 4 slightly different versions of that same request: same intent, but reworded or slightly refined so that 4 separate API calls will produce 4 slightly different results the user can compare. Each version should be one clear instruction (1-2 sentences). Output valid JSON only, in this exact shape, with no other text: {"prompts": ["first instruction", "second instruction", "third instruction", "fourth instruction"]}`;
+
+/**
+ * Call OpenAI chat to generate 4 slightly different phrasings of the user's prompt.
+ */
+async function getPromptVariations(
+  client: OpenAI,
+  userPrompt: string
+): Promise<string[]> {
+  const res = await client.chat.completions.create({
+    model: process.env.OPENAI_CHAT_MODEL?.trim() || "gpt-4o-mini",
+    messages: [
+      { role: "system", content: PROMPT_VARIATION_SYSTEM },
+      { role: "user", content: `User's request: ${userPrompt}\n\nOutput the JSON with 4 prompt variations now.` },
+    ],
+    temperature: 0.7,
+  });
+  const text = res.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error("OpenAI did not return prompt variations.");
+  const jsonStr = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  let parsed: { prompts?: string[] };
+  try {
+    parsed = JSON.parse(jsonStr) as { prompts?: string[] };
+  } catch {
+    throw new Error("Could not parse prompt variations from OpenAI.");
+  }
+  const prompts = Array.isArray(parsed?.prompts) ? parsed.prompts.filter((p): p is string => typeof p === "string" && p.length > 0) : [];
+  if (prompts.length < 4) {
+    return Array.from({ length: 4 }, (_, i) => (i === 0 ? userPrompt : `${userPrompt} (slight variation ${i + 1} for diversity)`));
+  }
+  return prompts.slice(0, 4);
+}
+
 type GenerateWithOpenAIInput = {
   imageBuffer: Buffer;
   imageMimeType: string;
@@ -36,7 +69,7 @@ function resolveApiKey(apiKeyOverride?: string) {
     process.env.CHATGPT_API_KEY?.trim();
   if (!key) {
     throw new Error(
-      "OPENAI_API_KEY (or CHATGPT_API_KEY) is not configured. Set it in Railway variables, or enable Advanced mode and paste your key there."
+      "OpenAI API key not set. In Railway: open your service → Variables tab → add OPENAI_API_KEY or CHATGPT_API_KEY (service variables, not only Shared). Or use Advanced mode below and paste a key."
     );
   }
   return key;
@@ -112,9 +145,8 @@ function extractImagePayload(response: unknown) {
 async function generateSingleAttempt(
   client: OpenAI,
   imageDataUrl: string,
-  userPrompt: string,
-  index: number,
-  attempts: number
+  editPrompt: string,
+  index: number
 ): Promise<OpenAIAttemptResult> {
   const response = await client.responses.create({
     model: "gpt-4.1",
@@ -135,7 +167,7 @@ async function generateSingleAttempt(
         content: [
           {
             type: "input_text",
-            text: `${userPrompt}\n\nAttempt variation: ${index + 1}/${attempts}. Keep composition and identity consistent with the source photo.`,
+            text: `Apply this edit to the photo: ${editPrompt}\n\nKeep composition and identity consistent with the source.`,
           },
           {
             type: "input_image",
@@ -161,11 +193,12 @@ async function generateSingleAttempt(
     index,
     imageBase64: payload.imageBase64,
     mimeType: payload.mimeType,
-    revisedPrompt: payload.revisedPrompt,
+    revisedPrompt: payload.revisedPrompt || editPrompt,
     meta: {
       provider: "openai",
       orchestratorModel: "gpt-4.1",
       rendererModel: "gpt-image-1 (auto)",
+      editPrompt,
       noCrop: true,
     },
   };
@@ -183,8 +216,17 @@ export async function generateWithOpenAI({
     "base64"
   )}`;
 
+  // Step 1: LLM generates 4 slightly different versions of the user's prompt
+  const promptVariations = await getPromptVariations(client, userPrompt);
+
+  // Step 2: 4 image API calls, each with one of the 4 prompt variations
   const jobs = Array.from({ length: attempts }, (_, index) =>
-    generateSingleAttempt(client, imageDataUrl, userPrompt, index, attempts)
+    generateSingleAttempt(
+      client,
+      imageDataUrl,
+      promptVariations[index] ?? userPrompt,
+      index
+    )
   );
 
   return Promise.all(jobs);

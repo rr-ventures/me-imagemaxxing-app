@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
+import Providers from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "me-imagemaxxing",
-  description: "Upload one photo and generate exactly five identity-safe editing attempts.",
+  title: "Dating Profile Photomaxxing",
+  description: "Professional AI dating photo edits — 4 variations, pick the best.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

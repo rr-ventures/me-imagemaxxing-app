@@ -1,6 +1,6 @@
 {
-  "name": "me-imagemaxxing-app",
-  "version": "0.2.0",
+  "name": "dating-profile-photomaxxing",
+  "version": "0.3.0",
   "private": true,
   "engines": {
     "node": ">=20"
@@ -12,11 +12,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.9.1",
+    "@prisma/client": "^6.5.0",
     "better-sqlite3": "^12.4.1",
     "next": "^14.2.35",
+    "next-auth": "^5.0.0-beta.28",
     "openai": "^5.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "resend": "^4.1.2",
     "sharp": "^0.34.3"
   },
   "devDependencies": {
@@ -28,6 +32,7 @@
     "eslint": "^8",
     "eslint-config-next": "^14.2.35",
     "postcss": "^8.4.49",
+    "prisma": "^6.5.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }
