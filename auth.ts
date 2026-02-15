@@ -57,14 +57,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    authorized({ auth: session, request }) {
-      const isSignIn = request.nextUrl.pathname.startsWith("/signin");
-      const isAuthApi = request.nextUrl.pathname.startsWith("/api/auth");
-      // Always allow auth pages and API
-      if (isSignIn || isAuthApi) return true;
-      // Block unauthenticated users everywhere else
-      return !!session?.user;
-    },
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as any).role ?? "user";

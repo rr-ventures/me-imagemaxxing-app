@@ -7,7 +7,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 function SignInContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  // Only allow relative callback URLs — strip any absolute URLs to prevent
+  // redirecting to 0.0.0.0 or other bad origins that leak from middleware
+  const rawCallback = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = rawCallback.startsWith("/") ? rawCallback : "/";
   const urlError = searchParams.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
